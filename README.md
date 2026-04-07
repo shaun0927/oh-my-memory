@@ -9,7 +9,7 @@
 Don't babysit Activity Monitor.  
 Let `oh-my-memory` watch memory pressure, detect stale heavy processes, protect your active work, and suggest the safest cleanup path.
 
-**Get Started** • [PRD](./PRD.md) • [Architecture](./ARCHITECTURE.md) • [Roadmap](./ROADMAP.md) • [Contributing](./CONTRIBUTING.md)
+**Get Started** • [PRD](./PRD.md) • [Architecture](./ARCHITECTURE.md) • [Providers](./PROVIDERS.md) • [Roadmap](./ROADMAP.md) • [Contributing](./CONTRIBUTING.md)
 
 * * *
 
@@ -376,6 +376,12 @@ cargo run -- status --config config/oh-my-memory.example.toml
 
 ```bash
 cargo run -- incidents list --config config/oh-my-memory.example.toml --limit 10
+```
+
+### 9. Inspect optional providers
+
+```bash
+cargo run -- context providers --config config/oh-my-memory.example.toml --level orange
 ```
 
 ---

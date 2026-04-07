@@ -34,11 +34,9 @@ enabled = true
 min_level = "orange"
 
 [context.openchrome]
-enabled = false
+enabled = true
 min_level = "orange"
-command = ""
-# Example:
-# command = "./examples/openchrome-provider.example.sh"
+command = "./examples/openchrome-provider.example.sh"
 
 [state]
 enabled = true

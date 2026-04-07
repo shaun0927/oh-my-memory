@@ -6,9 +6,11 @@ use tracing_subscriber::{EnvFilter, fmt};
 
 use oh_my_memory::{
     actions::execute_plans,
-    cli::{Cli, Commands, IncidentCommands},
+    cli::{Cli, Commands, ContextCommands, IncidentCommands},
     config::AppConfig,
-    context::{apply_context_hints, collect_context_hints},
+    context::{
+        apply_context_hints, collect_context_hints, inspect_context_providers, parse_pressure_level,
+    },
     daemon,
     history::apply_historical_stats,
     incident,
@@ -153,6 +155,14 @@ fn main() -> Result<()> {
                 } else {
                     println!("incident not found");
                 }
+            }
+        },
+        Commands::Context { command } => match command {
+            ContextCommands::Providers { config, level } => {
+                let config = AppConfig::load(&config)?;
+                let level = parse_pressure_level(&level)?;
+                let reports = inspect_context_providers(&config, level);
+                println!("{}", serde_json::to_string_pretty(&reports)?);
             }
         },
         Commands::PrintConfig => {

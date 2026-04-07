@@ -1,12 +1,39 @@
 use std::process::Command;
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, anyhow};
+use serde::{Deserialize, Serialize};
 use tracing::warn;
 
 use crate::{
     config::{AppConfig, OpenChromeProviderConfig, ProviderConfig},
     models::{ContextHints, PressureLevel},
 };
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OpenChromeContextPayload {
+    pub schema_version: u32,
+    pub source: String,
+    #[serde(default)]
+    pub protected_pids: Vec<u32>,
+    #[serde(default)]
+    pub stale_pids: Vec<u32>,
+    #[serde(default)]
+    pub notes: Vec<String>,
+    #[serde(default)]
+    pub active_workers: Vec<String>,
+    #[serde(default)]
+    pub stale_workers: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ProviderInspection {
+    pub name: String,
+    pub enabled: bool,
+    pub available: bool,
+    pub min_level: String,
+    pub collected: Option<ContextHints>,
+    pub skipped_reason: Option<String>,
+}
 
 pub trait ContextProvider {
     fn name(&self) -> &'static str;
@@ -135,9 +162,33 @@ impl ContextProvider for OpenChromeProvider {
             );
         }
         let stdout = String::from_utf8_lossy(&output.stdout);
-        let hints: ContextHints =
+        let payload: OpenChromeContextPayload =
             serde_json::from_str(&stdout).context("failed to parse openchrome context JSON")?;
-        Ok(hints)
+        if payload.schema_version != 1 {
+            return Err(anyhow!(
+                "unsupported openchrome schema_version={}",
+                payload.schema_version
+            ));
+        }
+        let mut notes = payload.notes;
+        if !payload.active_workers.is_empty() {
+            notes.push(format!(
+                "openchrome active_workers={}",
+                payload.active_workers.join(",")
+            ));
+        }
+        if !payload.stale_workers.is_empty() {
+            notes.push(format!(
+                "openchrome stale_workers={}",
+                payload.stale_workers.join(",")
+            ));
+        }
+        Ok(ContextHints {
+            source: payload.source,
+            protected_pids: payload.protected_pids,
+            stale_pids: payload.stale_pids,
+            notes,
+        })
     }
 }
 
@@ -160,6 +211,92 @@ pub fn collect_context_hints(config: &AppConfig, level: PressureLevel) -> Vec<Co
         }
     }
     hints
+}
+
+pub fn inspect_context_providers(
+    config: &AppConfig,
+    level: PressureLevel,
+) -> Vec<ProviderInspection> {
+    let providers: Vec<Box<dyn ContextProvider>> = vec![
+        Box::new(TmuxProvider::new(config.context.tmux.clone())),
+        Box::new(OpenChromeProvider::new(config.context.openchrome.clone())),
+    ];
+
+    providers
+        .into_iter()
+        .map(|provider| {
+            let enabled = provider.is_enabled();
+            let available = provider.is_available();
+            let min_level = provider.min_level();
+
+            if !enabled {
+                return ProviderInspection {
+                    name: provider.name().to_string(),
+                    enabled,
+                    available,
+                    min_level: min_level.as_str().to_string(),
+                    collected: None,
+                    skipped_reason: Some("disabled".to_string()),
+                };
+            }
+
+            if level < min_level {
+                return ProviderInspection {
+                    name: provider.name().to_string(),
+                    enabled,
+                    available,
+                    min_level: min_level.as_str().to_string(),
+                    collected: None,
+                    skipped_reason: Some(format!(
+                        "level {} below provider minimum {}",
+                        level.as_str(),
+                        min_level.as_str()
+                    )),
+                };
+            }
+
+            if !available {
+                return ProviderInspection {
+                    name: provider.name().to_string(),
+                    enabled,
+                    available,
+                    min_level: min_level.as_str().to_string(),
+                    collected: None,
+                    skipped_reason: Some("not available".to_string()),
+                };
+            }
+
+            match provider.collect() {
+                Ok(hints) => ProviderInspection {
+                    name: provider.name().to_string(),
+                    enabled,
+                    available,
+                    min_level: min_level.as_str().to_string(),
+                    collected: Some(hints),
+                    skipped_reason: None,
+                },
+                Err(error) => ProviderInspection {
+                    name: provider.name().to_string(),
+                    enabled,
+                    available,
+                    min_level: min_level.as_str().to_string(),
+                    collected: None,
+                    skipped_reason: Some(error.to_string()),
+                },
+            }
+        })
+        .collect()
+}
+
+pub fn parse_pressure_level(raw: &str) -> Result<PressureLevel> {
+    match raw.to_ascii_lowercase().as_str() {
+        "green" => Ok(PressureLevel::Green),
+        "yellow" => Ok(PressureLevel::Yellow),
+        "orange" => Ok(PressureLevel::Orange),
+        "red" => Ok(PressureLevel::Red),
+        "critical" => Ok(PressureLevel::Critical),
+        _ => Err(anyhow!("invalid pressure level: {raw}")),
+    }
 }
 
 pub fn apply_context_hints(snapshot: &mut crate::models::MemorySnapshot, hints: &[ContextHints]) {
@@ -227,5 +364,22 @@ mod tests {
         }];
         super::apply_context_hints(&mut snapshot, &hints);
         assert!(snapshot.processes[0].runtime_protected);
+    }
+
+    #[test]
+    fn openchrome_payload_parses_with_schema_v1() {
+        let raw = r#"{
+          "schema_version": 1,
+          "source": "openchrome",
+          "protected_pids": [111, 222],
+          "stale_pids": [333],
+          "notes": ["active browser session attached"],
+          "active_workers": ["default"],
+          "stale_workers": ["stale-1"]
+        }"#;
+        let payload: super::OpenChromeContextPayload = serde_json::from_str(raw).expect("payload");
+        assert_eq!(payload.schema_version, 1);
+        assert_eq!(payload.protected_pids.len(), 2);
+        assert_eq!(payload.stale_pids, vec![333]);
     }
 }

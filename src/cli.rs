@@ -46,6 +46,11 @@ pub enum Commands {
         #[command(subcommand)]
         command: IncidentCommands,
     },
+    /// Inspect optional context providers and the hints they return.
+    Context {
+        #[command(subcommand)]
+        command: ContextCommands,
+    },
     /// Print the default config template.
     PrintConfig,
 }
@@ -64,5 +69,16 @@ pub enum IncidentCommands {
         #[arg(long)]
         config: PathBuf,
         id: i64,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+pub enum ContextCommands {
+    /// List provider availability and current gating state.
+    Providers {
+        #[arg(long)]
+        config: PathBuf,
+        #[arg(long, default_value = "green")]
+        level: String,
     },
 }

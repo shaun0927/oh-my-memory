@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "source": "openchrome",
+  "protected_pids": [11111, 22222],
+  "stale_pids": [33333],
+  "notes": [
+    "example only: active browser workflow is attached to protected PIDs",
+    "example only: one browser worker is marked stale"
+  ],
+  "active_workers": ["default"],
+  "stale_workers": ["stale-render-worker"]
+}
