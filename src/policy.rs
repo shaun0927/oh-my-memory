@@ -68,7 +68,9 @@ pub fn plan_actions(
         }
         let matched = candidates
             .iter()
-            .filter(|candidate| is_hook_applicable(&hook.match_families, candidate))
+            .filter(|candidate| {
+                !candidate.runtime_protected && is_hook_applicable(&hook.match_families, candidate)
+            })
             .map(|candidate| candidate.pid)
             .collect::<Vec<_>>();
         if !matched.is_empty() {
@@ -83,7 +85,10 @@ pub fn plan_actions(
                 target_pids: matched,
                 rationale: candidates
                     .iter()
-                    .filter(|candidate| is_hook_applicable(&hook.match_families, candidate))
+                    .filter(|candidate| {
+                        !candidate.runtime_protected
+                            && is_hook_applicable(&hook.match_families, candidate)
+                    })
                     .flat_map(|candidate| candidate.stale_reasons.clone())
                     .take(5)
                     .collect(),
@@ -95,13 +100,14 @@ pub fn plan_actions(
         let generic_targets = candidates
             .iter()
             .filter(|candidate| {
-                matches!(
-                    candidate.family,
-                    ProcessFamily::Watcher
-                        | ProcessFamily::BuildTool
-                        | ProcessFamily::Helper
-                        | ProcessFamily::Unknown
-                )
+                !candidate.runtime_protected
+                    && matches!(
+                        candidate.family,
+                        ProcessFamily::Watcher
+                            | ProcessFamily::BuildTool
+                            | ProcessFamily::Helper
+                            | ProcessFamily::Unknown
+                    )
             })
             .take(3)
             .map(|candidate| candidate.pid)
@@ -125,6 +131,7 @@ pub fn plan_actions(
         let aggressive_targets = candidates
             .iter()
             .filter(|candidate| candidate.aggressive_candidate)
+            .filter(|candidate| !candidate.runtime_protected)
             .take(2)
             .map(|candidate| candidate.pid)
             .collect::<Vec<_>>();
@@ -237,6 +244,9 @@ mod tests {
                 matched_profile: None,
                 parent_missing: false,
                 duplicate_family_count: 1,
+                recent_activity: false,
+                runtime_protected: false,
+                protection_reasons: vec![],
                 stale_score: 0,
                 stale_reasons: vec![],
                 cleanup_candidate: false,

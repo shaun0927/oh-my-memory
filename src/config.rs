@@ -10,6 +10,7 @@ pub struct AppConfig {
     pub sampling: SamplingConfig,
     pub thresholds: ThresholdConfig,
     pub stale: StaleConfig,
+    pub protect: ProtectConfig,
     pub llm: LlmConfig,
     pub actions: ActionConfig,
     pub profiles: Vec<ProcessProfile>,
@@ -44,6 +45,15 @@ pub struct StaleConfig {
     pub high_memory_mb: u64,
     pub cleanup_score_threshold: i32,
     pub aggressive_score_threshold: i32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProtectConfig {
+    pub active_cpu_percent: f32,
+    pub recent_window_secs: u64,
+    pub startup_grace_secs: u64,
+    pub parent_chain_depth: usize,
+    pub protect_browser_main: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

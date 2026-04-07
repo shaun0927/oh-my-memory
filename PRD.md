@@ -436,9 +436,10 @@ latest snapshot 기반으로
 - better family/process-tree detection
 
 ### v0.3
-- tmux activity inference
-- browser automation family heuristics 강화
-- protect rules 확장
+- recent activity heuristics
+- startup grace / parent-chain protection
+- browser-main runtime protection
+- safer terminate ladder
 
 ### v0.4+
 - optional connector layer

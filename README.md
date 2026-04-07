@@ -408,8 +408,9 @@ over taking destructive action.
 
 ### v0.3 — Better protection
 - recent activity heuristics
-- stronger protection model
-- better terminate ladder
+- startup grace + parent-chain protection
+- browser-main runtime protection
+- safer terminate ladder
 
 ### v0.4+
 - optional tmux integration

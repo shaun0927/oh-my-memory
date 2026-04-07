@@ -65,6 +65,12 @@ sample / daemon / explain / print-config
 - parent missing / duplicate family / low CPU / long runtime 기반 stale score 계산
 - cleanup 후보 / aggressive 후보 산출
 
+## `protect`
+- recent CPU activity 보호
+- startup grace 보호
+- parent-chain inherited protection
+- browser main runtime protection
+
 ## `models`
 - `MemorySnapshot`
 - `ProcessSample`
@@ -80,6 +86,7 @@ sample / daemon / explain / print-config
 - pressure level 판정
 - LLM 호출 게이트 계산
 - stale score 기반 action 우선순위 생성
+- runtime-protected candidate 제외
 
 ## `actions`
 - dry-run 또는 external hook 실행
@@ -159,13 +166,19 @@ sample / daemon / explain / print-config
 - main app process
 - protected profile 매칭 대상
 
-현재 MVP는 profile 기반 보호만 갖고 있으며,
+현재 버전은 다음 보호 계층을 갖고 있습니다.
+
+- profile 기반 보호
+- recent CPU activity 보호
+- startup grace 보호
+- parent chain inherited protection
+- browser main family 보호
+
 앞으로는 다음이 추가될 수 있습니다.
 
 - foreground app introspection
 - tmux active pane inference
-- recent activity heuristics
-- parent-child tree confidence
+- richer recent activity heuristics
 
 ---
 
@@ -213,9 +226,10 @@ LLM의 비역할:
 - safe-first action ranking 강화
 
 ### v0.3
-- tmux active pane protection
-- browser automation stale detection 강화
-- signal ladder 세분화
+- recent activity heuristics
+- startup grace / parent-chain protection
+- browser-main runtime protection
+- safer terminate escalation ladder
 
 ### v0.4+
 - optional OpenChrome integration

@@ -7,5 +7,6 @@ pub mod journal;
 pub mod llm;
 pub mod models;
 pub mod policy;
+pub mod protect;
 pub mod stale;
 pub mod telemetry;

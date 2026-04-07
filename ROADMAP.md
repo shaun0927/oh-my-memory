@@ -20,10 +20,10 @@
 - [x] More precise safe-first action ranking
 
 ## v0.3 — User-work protection
-- [ ] Recent activity heuristics
-- [ ] Foreground app protection
-- [ ] Parent/child process tree confidence scoring
-- [ ] Safer terminate escalation ladder
+- [x] Recent activity heuristics
+- [x] Browser-main protection as default runtime guard
+- [x] Parent/child process tree confidence scoring
+- [x] Safer terminate escalation ladder
 
 ## v0.4 — Workflow-aware integrations
 - [ ] Optional tmux activity inference

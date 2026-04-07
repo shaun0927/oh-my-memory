@@ -12,6 +12,7 @@ use oh_my_memory::{
     journal::{latest_snapshot_path, read_latest_snapshot, write_latest_snapshot},
     llm::{compact_prompt, run_external_analyzer},
     policy::evaluate,
+    protect::ProtectionTracker,
     telemetry::collect_snapshot,
 };
 
@@ -25,7 +26,9 @@ fn main() -> Result<()> {
             if let Some(top) = top {
                 config.sampling.top_processes = top;
             }
-            let snapshot = collect_snapshot(&config)?;
+            let mut snapshot = collect_snapshot(&config)?;
+            let mut protection_tracker = ProtectionTracker::new();
+            protection_tracker.apply(&config, &mut snapshot);
             let decision = evaluate(&config, &snapshot, 0, 0, None);
             let reports = execute_plans(&config, &snapshot, &decision);
             let latest_path = write_latest_snapshot(&config, &snapshot, &decision)?;

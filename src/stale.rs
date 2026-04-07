@@ -77,6 +77,16 @@ fn stale_score(config: &AppConfig, process: &ProcessSample) -> (i32, Vec<String>
         Importance::Background | Importance::Unknown => {}
     }
 
+    if process.recent_activity {
+        score -= 35;
+        reasons.push("recent_activity".to_string());
+    }
+
+    if process.runtime_protected {
+        score -= 45;
+        reasons.push("runtime_protected".to_string());
+    }
+
     (score, reasons)
 }
 
@@ -123,6 +133,9 @@ mod tests {
             matched_profile: None,
             parent_missing: false,
             duplicate_family_count: 1,
+            recent_activity: false,
+            runtime_protected: false,
+            protection_reasons: vec![],
             stale_score: 0,
             stale_reasons: vec![],
             cleanup_candidate: false,

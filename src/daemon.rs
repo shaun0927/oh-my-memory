@@ -13,6 +13,7 @@ use crate::{
     llm::{compact_prompt, run_external_analyzer},
     models::PressureLevel,
     policy::evaluate,
+    protect::ProtectionTracker,
     telemetry::collect_snapshot,
 };
 
@@ -20,9 +21,11 @@ pub fn run(config: AppConfig) -> Result<()> {
     let mut consecutive_high_pressure = 0usize;
     let mut daily_budget_used = 0u32;
     let mut last_llm_at: Option<u64> = None;
+    let mut protection_tracker = ProtectionTracker::new();
 
     loop {
-        let snapshot = collect_snapshot(&config)?;
+        let mut snapshot = collect_snapshot(&config)?;
+        protection_tracker.apply(&config, &mut snapshot);
         let seconds_since_last_llm =
             last_llm_at.map(|last| snapshot.timestamp_unix_secs.saturating_sub(last));
         let decision = evaluate(
