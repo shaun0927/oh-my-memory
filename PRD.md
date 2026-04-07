@@ -479,10 +479,33 @@ latest snapshot 기반으로
 - lazy context hint merge
 
 ### v0.5+
+### v0.5
+- SQLite backend
+- incident replay
+- structured action history query
+- stateful stale-history bonus
+
+### Future
 - optional Codex/Claude metadata integration
 - dashboard
 - checkpoint/suspend integrations
 - adaptive policy tuning
+
+---
+
+## 10.2 Stateful memory janitor behavior
+
+v0.5부터는 daemon이 단발 snapshot 판단만 하지 않고, 이전 incident를 기억한다.
+
+핵심 변화:
+- latest incident를 SQLite에 저장
+- process history를 조회해 stale bonus 계산
+- incidents list/show/explain-last CLI 제공
+- action report를 incident와 연결 저장
+
+즉 제품은
+\"현재 상태를 보는 daemon\"에서
+\"최근 incident를 기억하고 설명할 수 있는 daemon\"으로 진화한다.
 
 ---
 

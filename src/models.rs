@@ -62,6 +62,8 @@ pub struct ProcessSample {
     pub runtime_protected: bool,
     pub protection_reasons: Vec<String>,
     pub external_stale_hint: bool,
+    pub historical_sightings: u32,
+    pub historical_stale_hits: u32,
     pub stale_score: i32,
     pub stale_reasons: Vec<String>,
     pub cleanup_candidate: bool,
@@ -121,6 +123,26 @@ pub struct Decision {
     pub llm_recommended: bool,
     pub planned_actions: Vec<ActionPlan>,
     pub context_notes: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IncidentSummary {
+    pub id: i64,
+    pub timestamp_unix_secs: u64,
+    pub level: PressureLevel,
+    pub used_percent: f64,
+    pub swap_used_mb: u64,
+    pub llm_recommended: bool,
+    pub action_count: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IncidentDetail {
+    pub summary: IncidentSummary,
+    pub snapshot: MemorySnapshot,
+    pub decision: Decision,
+    pub reports: Vec<crate::actions::ExecutionReport>,
+    pub llm_output: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

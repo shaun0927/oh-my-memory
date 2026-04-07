@@ -31,6 +31,38 @@ pub enum Commands {
         #[arg(long)]
         config: PathBuf,
     },
+    /// Explain the latest recorded incident from persistent state.
+    ExplainLast {
+        #[arg(long)]
+        config: PathBuf,
+    },
+    /// Show a compact status summary from the latest recorded incident.
+    Status {
+        #[arg(long)]
+        config: PathBuf,
+    },
+    /// Inspect incident history.
+    Incidents {
+        #[command(subcommand)]
+        command: IncidentCommands,
+    },
     /// Print the default config template.
     PrintConfig,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum IncidentCommands {
+    /// List recent incidents.
+    List {
+        #[arg(long)]
+        config: PathBuf,
+        #[arg(long, default_value_t = 10)]
+        limit: usize,
+    },
+    /// Show one incident in detail.
+    Show {
+        #[arg(long)]
+        config: PathBuf,
+        id: i64,
+    },
 }

@@ -307,6 +307,9 @@ The current repository already includes a working foundation:
 - parent-chain runtime protection
 - safe-first action planning
 - optional tmux/OpenChrome context-provider architecture
+- SQLite-backed incident persistence
+- incident list/show and explain-last CLI
+- historical stale bonus based on recent incident history
 - dry-run execution
 - JSONL journaling and latest snapshot output
 - compact LLM prompt generation and optional external analyzer support
@@ -361,6 +364,18 @@ cargo run -- daemon --config config/oh-my-memory.example.toml
 
 ```bash
 cargo run -- explain --config config/oh-my-memory.example.toml
+```
+
+### 7. Check latest status
+
+```bash
+cargo run -- status --config config/oh-my-memory.example.toml
+```
+
+### 8. List incidents
+
+```bash
+cargo run -- incidents list --config config/oh-my-memory.example.toml --limit 10
 ```
 
 ---
@@ -445,7 +460,12 @@ over taking destructive action.
 - optional OpenChrome stale/protected PID hints
 - lazy provider activation
 
-### v0.5+
+### v0.5 — Persistence and observability
+- SQLite-backed incident history
+- incident replay
+- status / incidents / explain-last CLI
+
+### Future
 - optional Codex/Claude metadata integrations
 - optional dashboard
 

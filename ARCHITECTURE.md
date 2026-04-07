@@ -106,6 +106,11 @@ sample / daemon / explain / print-config
 - JSONL journal append
 - 나중에 incident replay 가능하게 함
 
+## `store`
+- SQLite 기반 incident/state persistence
+- latest incident / incident list / incident detail 조회
+- process history 기반 stale bonus 계산
+
 ## `llm`
 - compact prompt 생성
 - 외부 LLM analyzer command 호출
@@ -245,9 +250,13 @@ LLM의 비역할:
 - optional tmux/OpenChrome context providers
 - lazy hint merge into core protection/stale logic
 
-### v0.5+
+### v0.5
+- SQLite backend
+- incident replay
+- structured action history query
+
+### Future
 - optional Codex/Claude metadata integration
-- SQLite state backend
 - dashboard
 
 ---

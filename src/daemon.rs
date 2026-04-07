@@ -10,12 +10,14 @@ use crate::{
     actions::execute_plans,
     config::AppConfig,
     context::{apply_context_hints, collect_context_hints},
+    history::apply_historical_stats,
     journal::{append_journal_entry, write_latest_snapshot},
     llm::{compact_prompt, run_external_analyzer},
     models::PressureLevel,
     policy::evaluate,
     protect::ProtectionTracker,
     stale::enrich_processes,
+    store::Store,
     telemetry::collect_snapshot,
 };
 
@@ -24,6 +26,7 @@ pub fn run(config: AppConfig) -> Result<()> {
     let mut daily_budget_used = 0u32;
     let mut last_llm_at: Option<u64> = None;
     let mut protection_tracker = ProtectionTracker::new();
+    let store = Store::open(&config)?;
 
     loop {
         let mut snapshot = collect_snapshot(&config)?;
@@ -32,6 +35,12 @@ pub fn run(config: AppConfig) -> Result<()> {
         let context_hints = collect_context_hints(&config, base_level);
         apply_context_hints(&mut snapshot, &context_hints);
         enrich_processes(&config, &mut snapshot.processes);
+        if let Some(store) = &store {
+            let stats = store
+                .historical_stats(&snapshot.processes, config.state.history_lookback_incidents)?;
+            apply_historical_stats(&config, &mut snapshot.processes, &stats);
+            enrich_processes(&config, &mut snapshot.processes);
+        }
         let seconds_since_last_llm =
             last_llm_at.map(|last| snapshot.timestamp_unix_secs.saturating_sub(last));
         let mut decision = evaluate(
@@ -78,6 +87,9 @@ pub fn run(config: AppConfig) -> Result<()> {
             &reports,
             llm_output.as_deref(),
         )?;
+        if let Some(store) = &store {
+            store.insert_incident(&snapshot, &decision, &reports, llm_output.as_deref())?;
+        }
 
         info!(
             level = %decision.level.as_str(),

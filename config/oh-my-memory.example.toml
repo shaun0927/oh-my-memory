@@ -38,6 +38,12 @@ enabled = false
 min_level = "orange"
 command = ""
 
+[state]
+enabled = true
+sqlite_path = ".oh-my-memory/state.sqlite3"
+history_lookback_incidents = 20
+stale_history_bonus_threshold = 3
+
 [llm]
 enabled = false
 min_level_for_llm = "orange"

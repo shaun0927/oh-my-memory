@@ -32,9 +32,9 @@
 - [ ] Optional Codex/Claude session metadata support
 
 ## v0.5 — Persistence and observability
-- [ ] SQLite backend
-- [ ] Incident replay
-- [ ] Structured action history querying
+- [x] SQLite backend
+- [x] Incident replay
+- [x] Structured action history querying
 - [ ] Periodic health summary reports
 
 ## Future

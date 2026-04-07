@@ -12,6 +12,7 @@ pub struct AppConfig {
     pub stale: StaleConfig,
     pub protect: ProtectConfig,
     pub context: ContextConfig,
+    pub state: StateConfig,
     pub llm: LlmConfig,
     pub actions: ActionConfig,
     pub profiles: Vec<ProcessProfile>,
@@ -74,6 +75,14 @@ pub struct OpenChromeProviderConfig {
     pub enabled: bool,
     pub min_level: PressureLevel,
     pub command: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StateConfig {
+    pub enabled: bool,
+    pub sqlite_path: String,
+    pub history_lookback_incidents: usize,
+    pub stale_history_bonus_threshold: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

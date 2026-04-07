@@ -6,16 +6,19 @@ use tracing_subscriber::{EnvFilter, fmt};
 
 use oh_my_memory::{
     actions::execute_plans,
-    cli::{Cli, Commands},
+    cli::{Cli, Commands, IncidentCommands},
     config::AppConfig,
     context::{apply_context_hints, collect_context_hints},
     daemon,
+    history::apply_historical_stats,
+    incident,
     journal::{latest_snapshot_path, read_latest_snapshot, write_latest_snapshot},
     llm::{compact_prompt, run_external_analyzer},
     models::Decision,
     policy::evaluate,
     protect::ProtectionTracker,
     stale::enrich_processes,
+    store::Store,
     telemetry::collect_snapshot,
 };
 
@@ -36,6 +39,14 @@ fn main() -> Result<()> {
             let context_hints = collect_context_hints(&config, base_level);
             apply_context_hints(&mut snapshot, &context_hints);
             enrich_processes(&config, &mut snapshot.processes);
+            if let Some(store) = Store::open(&config)? {
+                let stats = store.historical_stats(
+                    &snapshot.processes,
+                    config.state.history_lookback_incidents,
+                )?;
+                apply_historical_stats(&config, &mut snapshot.processes, &stats);
+                enrich_processes(&config, &mut snapshot.processes);
+            }
             let mut decision: Decision = evaluate(&config, &snapshot, 0, 0, None);
             decision.context_notes = context_hints
                 .iter()
@@ -65,9 +76,13 @@ fn main() -> Result<()> {
             }
             if !reports.is_empty() {
                 println!("planned actions:");
-                for report in reports {
+                for report in &reports {
                     println!("- {} => {}", report.action_id, report.detail);
                 }
+            }
+            if let Some(store) = Store::open(&config)? {
+                let incident_id = store.insert_incident(&snapshot, &decision, &reports, None)?;
+                println!("incident stored: {}", incident_id);
             }
         }
         Commands::Daemon { config } => {
@@ -95,6 +110,51 @@ fn main() -> Result<()> {
                 println!("{}", prompt);
             }
         }
+        Commands::ExplainLast { config } => {
+            let config = AppConfig::load(&config)?;
+            if let Some(detail) = incident::latest(&config)? {
+                println!("{}", compact_prompt(&detail.snapshot, &detail.decision));
+            } else {
+                println!("no incidents recorded");
+            }
+        }
+        Commands::Status { config } => {
+            let config = AppConfig::load(&config)?;
+            if let Some(detail) = incident::latest(&config)? {
+                println!("latest incident: {}", detail.summary.id);
+                println!("level: {}", detail.summary.level.as_str());
+                println!("used: {:.2}%", detail.summary.used_percent);
+                println!("swap: {} MB", detail.summary.swap_used_mb);
+                println!("actions: {}", detail.summary.action_count);
+            } else {
+                println!("no incidents recorded");
+            }
+        }
+        Commands::Incidents { command } => match command {
+            IncidentCommands::List { config, limit } => {
+                let config = AppConfig::load(&config)?;
+                let incidents = incident::list(&config, limit)?;
+                for item in incidents {
+                    println!(
+                        "#{} ts={} level={} used={:.2}% swap={}MB actions={}",
+                        item.id,
+                        item.timestamp_unix_secs,
+                        item.level.as_str(),
+                        item.used_percent,
+                        item.swap_used_mb,
+                        item.action_count
+                    );
+                }
+            }
+            IncidentCommands::Show { config, id } => {
+                let config = AppConfig::load(&config)?;
+                if let Some(detail) = incident::show(&config, id)? {
+                    println!("{}", serde_json::to_string_pretty(&detail)?);
+                } else {
+                    println!("incident not found");
+                }
+            }
+        },
         Commands::PrintConfig => {
             print!("{}", AppConfig::default_toml());
         }

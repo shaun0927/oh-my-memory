@@ -1,7 +1,7 @@
 use std::process::Command;
 
 use anyhow::{Context, Result};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tracing::{info, warn};
 
 use crate::{
@@ -9,7 +9,7 @@ use crate::{
     models::{ActionKind, ActionPlan, Decision, MemorySnapshot},
 };
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExecutionReport {
     pub action_id: String,
     pub executed: bool,
