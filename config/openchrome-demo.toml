@@ -38,6 +38,11 @@ enabled = true
 min_level = "orange"
 command = "./examples/openchrome-provider.example.sh"
 
+[context.agents]
+enabled = false
+min_level = "orange"
+command = ""
+
 [state]
 enabled = true
 sqlite_path = ".oh-my-memory/state.sqlite3"
