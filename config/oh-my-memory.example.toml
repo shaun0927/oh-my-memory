@@ -29,6 +29,15 @@ startup_grace_secs = 120
 parent_chain_depth = 2
 protect_browser_main = true
 
+[context.tmux]
+enabled = true
+min_level = "orange"
+
+[context.openchrome]
+enabled = false
+min_level = "orange"
+command = ""
+
 [llm]
 enabled = false
 min_level_for_llm = "orange"

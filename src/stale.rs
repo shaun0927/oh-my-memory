@@ -87,6 +87,11 @@ fn stale_score(config: &AppConfig, process: &ProcessSample) -> (i32, Vec<String>
         reasons.push("runtime_protected".to_string());
     }
 
+    if process.external_stale_hint {
+        score += 20;
+        reasons.push("external_stale_hint".to_string());
+    }
+
     (score, reasons)
 }
 
@@ -136,6 +141,7 @@ mod tests {
             recent_activity: false,
             runtime_protected: false,
             protection_reasons: vec![],
+            external_stale_hint: false,
             stale_score: 0,
             stale_reasons: vec![],
             cleanup_candidate: false,

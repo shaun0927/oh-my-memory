@@ -8,11 +8,14 @@ use oh_my_memory::{
     actions::execute_plans,
     cli::{Cli, Commands},
     config::AppConfig,
+    context::{apply_context_hints, collect_context_hints},
     daemon,
     journal::{latest_snapshot_path, read_latest_snapshot, write_latest_snapshot},
     llm::{compact_prompt, run_external_analyzer},
+    models::Decision,
     policy::evaluate,
     protect::ProtectionTracker,
+    stale::enrich_processes,
     telemetry::collect_snapshot,
 };
 
@@ -29,7 +32,15 @@ fn main() -> Result<()> {
             let mut snapshot = collect_snapshot(&config)?;
             let mut protection_tracker = ProtectionTracker::new();
             protection_tracker.apply(&config, &mut snapshot);
-            let decision = evaluate(&config, &snapshot, 0, 0, None);
+            let base_level = oh_my_memory::policy::level_from_snapshot(&config, &snapshot);
+            let context_hints = collect_context_hints(&config, base_level);
+            apply_context_hints(&mut snapshot, &context_hints);
+            enrich_processes(&config, &mut snapshot.processes);
+            let mut decision: Decision = evaluate(&config, &snapshot, 0, 0, None);
+            decision.context_notes = context_hints
+                .iter()
+                .flat_map(|hint| hint.notes.clone())
+                .collect::<Vec<_>>();
             let reports = execute_plans(&config, &snapshot, &decision);
             let latest_path = write_latest_snapshot(&config, &snapshot, &decision)?;
             println!("snapshot saved to: {}", latest_path.display());
@@ -45,6 +56,12 @@ fn main() -> Result<()> {
                     process.memory_bytes / (1024 * 1024),
                     process.importance
                 );
+            }
+            if !decision.context_notes.is_empty() {
+                println!("context notes:");
+                for note in &decision.context_notes {
+                    println!("- {}", note);
+                }
             }
             if !reports.is_empty() {
                 println!("planned actions:");

@@ -197,6 +197,18 @@ LLM은 제어기가 아니라 advisor다.
 - protected / not_protected
 - protection reasons
 
+## 6.4.1 Runtime protection heuristics
+v0.3부터 다음이 반영된다.
+
+- recent CPU activity protection
+- startup grace protection
+- parent-chain inherited protection
+- browser-main family protection
+
+즉 단순 profile 보호를 넘어서,
+**지금 막 실행되었거나 실제로 움직이고 있거나 active process의 부모 체인에 있는 작업**은
+stale cleanup 후보에서 강하게 제외된다.
+
 ## 6.5 Layer 5 — Policy Engine
 역할:
 - 메모리 pressure level 계산
@@ -272,6 +284,26 @@ LLM 입력 최소화:
 LLM 출력:
 - concise explanation
 - safe action recommendation
+
+---
+
+## 6.9 Optional context providers
+
+v0.4부터는 core daemon 위에 optional provider를 얹을 수 있어야 한다.
+
+원칙:
+- provider는 **있으면 사용**, 없으면 무시
+- provider는 **판단기**가 아니라 **hint 공급자**
+- core policy/action planner가 최종 결정을 유지
+
+예:
+- tmux provider → active pane PID 보호 힌트
+- OpenChrome provider → protected/stale PID JSON 힌트
+
+운영 원칙:
+- 항상 호출하지 않는다
+- pressure가 configured minimum level 이상일 때만 lazy query
+- provider 실패는 daemon 전체 실패가 되면 안 된다
 
 ---
 
@@ -441,8 +473,13 @@ latest snapshot 기반으로
 - browser-main runtime protection
 - safer terminate ladder
 
-### v0.4+
-- optional connector layer
+### v0.4
+- optional tmux provider
+- optional OpenChrome provider
+- lazy context hint merge
+
+### v0.5+
+- optional Codex/Claude metadata integration
 - dashboard
 - checkpoint/suspend integrations
 - adaptive policy tuning

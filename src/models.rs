@@ -61,6 +61,7 @@ pub struct ProcessSample {
     pub recent_activity: bool,
     pub runtime_protected: bool,
     pub protection_reasons: Vec<String>,
+    pub external_stale_hint: bool,
     pub stale_score: i32,
     pub stale_reasons: Vec<String>,
     pub cleanup_candidate: bool,
@@ -119,4 +120,13 @@ pub struct Decision {
     pub reasons: Vec<String>,
     pub llm_recommended: bool,
     pub planned_actions: Vec<ActionPlan>,
+    pub context_notes: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct ContextHints {
+    pub source: String,
+    pub protected_pids: Vec<u32>,
+    pub stale_pids: Vec<u32>,
+    pub notes: Vec<String>,
 }

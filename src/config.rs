@@ -11,6 +11,7 @@ pub struct AppConfig {
     pub thresholds: ThresholdConfig,
     pub stale: StaleConfig,
     pub protect: ProtectConfig,
+    pub context: ContextConfig,
     pub llm: LlmConfig,
     pub actions: ActionConfig,
     pub profiles: Vec<ProcessProfile>,
@@ -54,6 +55,25 @@ pub struct ProtectConfig {
     pub startup_grace_secs: u64,
     pub parent_chain_depth: usize,
     pub protect_browser_main: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContextConfig {
+    pub tmux: ProviderConfig,
+    pub openchrome: OpenChromeProviderConfig,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProviderConfig {
+    pub enabled: bool,
+    pub min_level: PressureLevel,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OpenChromeProviderConfig {
+    pub enabled: bool,
+    pub min_level: PressureLevel,
+    pub command: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

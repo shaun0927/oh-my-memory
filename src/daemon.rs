@@ -9,11 +9,13 @@ use tracing::{info, warn};
 use crate::{
     actions::execute_plans,
     config::AppConfig,
+    context::{apply_context_hints, collect_context_hints},
     journal::{append_journal_entry, write_latest_snapshot},
     llm::{compact_prompt, run_external_analyzer},
     models::PressureLevel,
     policy::evaluate,
     protect::ProtectionTracker,
+    stale::enrich_processes,
     telemetry::collect_snapshot,
 };
 
@@ -26,15 +28,23 @@ pub fn run(config: AppConfig) -> Result<()> {
     loop {
         let mut snapshot = collect_snapshot(&config)?;
         protection_tracker.apply(&config, &mut snapshot);
+        let base_level = crate::policy::level_from_snapshot(&config, &snapshot);
+        let context_hints = collect_context_hints(&config, base_level);
+        apply_context_hints(&mut snapshot, &context_hints);
+        enrich_processes(&config, &mut snapshot.processes);
         let seconds_since_last_llm =
             last_llm_at.map(|last| snapshot.timestamp_unix_secs.saturating_sub(last));
-        let decision = evaluate(
+        let mut decision = evaluate(
             &config,
             &snapshot,
             consecutive_high_pressure,
             daily_budget_used,
             seconds_since_last_llm,
         );
+        decision.context_notes = context_hints
+            .iter()
+            .flat_map(|hint| hint.notes.clone())
+            .collect::<Vec<_>>();
 
         if decision.level >= PressureLevel::Orange {
             consecutive_high_pressure += 1;

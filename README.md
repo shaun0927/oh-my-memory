@@ -143,6 +143,13 @@ You do **not** need a full OpenChrome or tmux connector to start solving those p
 
 Connectors can come later as **accuracy upgrades**, not as the foundation.
 
+In the current codebase, that means:
+
+- the core daemon works perfectly fine without tmux or OpenChrome
+- optional providers can attach **context hints**
+- those hints only refine protection and stale ranking
+- the policy engine remains the final decision maker
+
 ---
 
 ## How it works
@@ -218,6 +225,24 @@ Protected categories include:
 - explicitly protected profiles
 - critical main application processes
 
+### Optional Context Providers
+When available, optional providers can add extra hints without turning the daemon into a connector-dependent system.
+
+Current v0.4 direction includes:
+
+- **tmux provider**  
+  Can protect the currently active pane PID when tmux is available.
+
+- **OpenChrome provider**  
+  Can consume external JSON hints and mark specific PIDs as protected or stale.
+
+These providers are:
+
+- optional
+- lazy
+- pressure-gated
+- merged back into the same process-first policy engine
+
 ### Policy Engine
 Evaluates pressure levels:
 
@@ -278,14 +303,17 @@ The current repository already includes a working foundation:
 - process profile classification
 - process family fingerprinting
 - stale scoring based on runtime, CPU, duplication, orphan state, and protection
+- recent activity and startup-grace protection
+- parent-chain runtime protection
 - safe-first action planning
+- optional tmux/OpenChrome context-provider architecture
 - dry-run execution
 - JSONL journaling and latest snapshot output
 - compact LLM prompt generation and optional external analyzer support
 
 What it does **not** include yet:
 
-- deep tool-specific connectors
+- deep tool-specific connectors with rich semantic state
 - GUI dashboard
 - aggressive automation by default
 - long-horizon behavioral learning
@@ -412,10 +440,13 @@ over taking destructive action.
 - browser-main runtime protection
 - safer terminate ladder
 
-### v0.4+
-- optional tmux integration
-- optional browser automation integration
-- optional OpenChrome integration
+### v0.4 — Optional context hints
+- optional tmux activity hints
+- optional OpenChrome stale/protected PID hints
+- lazy provider activation
+
+### v0.5+
+- optional Codex/Claude metadata integrations
 - optional dashboard
 
 See [ROADMAP.md](./ROADMAP.md) for the fuller plan.

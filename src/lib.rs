@@ -1,6 +1,7 @@
 pub mod actions;
 pub mod cli;
 pub mod config;
+pub mod context;
 pub mod daemon;
 pub mod fingerprint;
 pub mod journal;

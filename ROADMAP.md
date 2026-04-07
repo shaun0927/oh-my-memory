@@ -26,9 +26,9 @@
 - [x] Safer terminate escalation ladder
 
 ## v0.4 — Workflow-aware integrations
-- [ ] Optional tmux activity inference
-- [ ] Optional browser automation heuristics
-- [ ] Optional OpenChrome integration
+- [x] Optional tmux activity inference
+- [x] Optional OpenChrome integration architecture
+- [x] Lazy context hint collection
 - [ ] Optional Codex/Claude session metadata support
 
 ## v0.5 — Persistence and observability

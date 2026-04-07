@@ -75,6 +75,7 @@ pub fn collect_snapshot(config: &AppConfig) -> Result<MemorySnapshot> {
                 recent_activity: false,
                 runtime_protected: false,
                 protection_reasons: vec![],
+                external_stale_hint: false,
                 stale_score: 0,
                 stale_reasons: vec![],
                 cleanup_candidate: false,

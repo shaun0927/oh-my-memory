@@ -198,6 +198,14 @@ pub fn evaluate(
                 .filter(|p| p.cleanup_candidate)
                 .count()
         ),
+        format!(
+            "runtime_protected={}",
+            snapshot
+                .processes
+                .iter()
+                .filter(|p| p.runtime_protected)
+                .count()
+        ),
     ];
 
     let planned_actions = plan_actions(config, level, snapshot);
@@ -207,6 +215,7 @@ pub fn evaluate(
         reasons,
         llm_recommended,
         planned_actions,
+        context_notes: vec![],
     }
 }
 
@@ -247,6 +256,7 @@ mod tests {
                 recent_activity: false,
                 runtime_protected: false,
                 protection_reasons: vec![],
+                external_stale_hint: false,
                 stale_score: 0,
                 stale_reasons: vec![],
                 cleanup_candidate: false,

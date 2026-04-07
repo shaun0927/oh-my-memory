@@ -33,6 +33,9 @@ sample / daemon / explain / print-config
            Safety Guard
                 │
                 ▼
+    Optional Context Providers
+                │
+                ▼
            Policy Engine
                 │
                 ▼
@@ -70,6 +73,12 @@ sample / daemon / explain / print-config
 - startup grace 보호
 - parent-chain inherited protection
 - browser main runtime protection
+
+## `context`
+- optional tmux provider
+- optional OpenChrome provider
+- lazy context hint collection
+- protected/stale pid hints merge
 
 ## `models`
 - `MemorySnapshot`
@@ -129,6 +138,7 @@ sample / daemon / explain / print-config
 ## Cold Path
 조건을 만족할 때만 실행:
 - sustained pressure deeper analysis
+- optional context provider queries
 - external cleanup hooks
 - optional LLM analysis
 
@@ -231,8 +241,11 @@ LLM의 비역할:
 - browser-main runtime protection
 - safer terminate escalation ladder
 
-### v0.4+
-- optional OpenChrome integration
+### v0.4
+- optional tmux/OpenChrome context providers
+- lazy hint merge into core protection/stale logic
+
+### v0.5+
 - optional Codex/Claude metadata integration
 - SQLite state backend
 - dashboard
