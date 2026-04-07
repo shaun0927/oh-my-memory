@@ -1,0 +1,4 @@
+/target
+*.log
+.oh-my-memory/
+.DS_Store

@@ -1,0 +1,72 @@
+[sampling]
+interval_secs = 15
+top_processes = 12
+sustained_intervals_before_llm = 4
+
+[thresholds]
+yellow_memory_percent = 75.0
+orange_memory_percent = 85.0
+red_memory_percent = 92.0
+critical_memory_percent = 96.0
+yellow_swap_mb = 128
+orange_swap_mb = 512
+red_swap_mb = 1024
+critical_swap_mb = 2048
+
+[llm]
+enabled = false
+min_level_for_llm = "orange"
+cooldown_secs = 900
+daily_budget = 6
+external_command = ""
+
+[actions]
+dry_run = true
+execute_hooks = false
+allow_destructive = false
+
+[[actions.hooks]]
+id = "cleanup_openchrome_workers"
+description = "Ask OpenChrome to clean idle workers/tabs"
+min_level = "orange"
+command = "echo cleanup_openchrome_workers"
+
+[[actions.hooks]]
+id = "suspend_idle_tmux_agents"
+description = "Suspend low-priority tmux/agent workloads after checkpoint"
+min_level = "red"
+command = "echo suspend_idle_tmux_agents"
+
+[[profiles]]
+name = "foreground_browser"
+importance = "protected"
+match_terms = ["Google Chrome", "Chrome", "Chromium"]
+notes = "Protect currently active browser processes by policy; actual foreground detection should be layered on top by integrations."
+
+[[profiles]]
+name = "openchrome"
+importance = "background"
+match_terms = ["openchrome", "chrome-mcp"]
+notes = "Often safe for cleanup hooks when stale."
+
+[[profiles]]
+name = "codex"
+importance = "recent"
+match_terms = ["codex", "oh-my-codex"]
+notes = "Prefer suspend/checkpoint instead of kill."
+
+[[profiles]]
+name = "claude"
+importance = "recent"
+match_terms = ["claude", "oh-my-claudecode"]
+notes = "Prefer suspend/checkpoint instead of kill."
+
+[[profiles]]
+name = "tmux"
+importance = "background"
+match_terms = ["tmux"]
+notes = "Use pane/session metadata to refine importance in future integrations."
+
+[journal]
+directory = ".oh-my-memory"
+max_entries = 5000
