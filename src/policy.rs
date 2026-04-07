@@ -257,6 +257,8 @@ mod tests {
                 runtime_protected: false,
                 protection_reasons: vec![],
                 external_stale_hint: false,
+                historical_sightings: 0,
+                historical_stale_hits: 0,
                 stale_score: 0,
                 stale_reasons: vec![],
                 cleanup_candidate: false,
