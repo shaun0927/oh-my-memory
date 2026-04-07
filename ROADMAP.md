@@ -29,13 +29,13 @@
 - [x] Optional tmux activity inference
 - [x] Optional OpenChrome integration architecture
 - [x] Lazy context hint collection
-- [ ] Optional Codex/Claude session metadata support
+- [x] Optional Codex/Claude session metadata support
 
 ## v0.5 — Persistence and observability
 - [x] SQLite backend
 - [x] Incident replay
 - [x] Structured action history querying
-- [ ] Periodic health summary reports
+- [x] Periodic/operator health summary reports
 
 ## Future
 - [ ] Optional dashboard

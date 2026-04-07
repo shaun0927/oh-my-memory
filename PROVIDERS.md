@@ -78,6 +78,55 @@ cargo run -- context providers --config config/oh-my-memory.example.toml --level
 
 ---
 
+## Agent metadata provider
+
+The agent provider is a generic external JSON provider for Codex/Claude-style session metadata.
+
+It is useful when another tool can tell `oh-my-memory`:
+
+- which PIDs are definitely tied to an active session
+- which PIDs are stale helpers
+- which PIDs should be treated as recently active even if CPU alone is ambiguous
+
+### Contract
+
+The command must print JSON matching this schema:
+
+```json
+{
+  "schema_version": 1,
+  "source": "agents",
+  "protected_pids": [444],
+  "stale_pids": [555],
+  "recent_pids": [666],
+  "notes": ["codex session is currently active"],
+  "active_sessions": ["codex-main"],
+  "idle_sessions": ["claude-idle-1"]
+}
+```
+
+### Field meanings
+
+- `schema_version`: currently must be `1`
+- `source`: provider source label, usually `agents`
+- `protected_pids`: PIDs that must be protected
+- `stale_pids`: PIDs that can receive an external stale bonus
+- `recent_pids`: PIDs that should be treated as recently active/protected
+- `notes`: human-readable notes
+- `active_sessions`: optional list of active agent/session identifiers
+- `idle_sessions`: optional list of idle/stale agent/session identifiers
+
+### Example config
+
+```toml
+[context.agents]
+enabled = true
+min_level = "orange"
+command = "./examples/agent-provider.example.sh"
+```
+
+---
+
 ## Why providers are optional
 
 `oh-my-memory` is intentionally process-first.

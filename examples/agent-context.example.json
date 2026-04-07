@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "source": "agents",
+  "protected_pids": [44444],
+  "stale_pids": [55555],
+  "recent_pids": [66666],
+  "notes": [
+    "example only: codex main session is active",
+    "example only: one claude helper session looks stale"
+  ],
+  "active_sessions": ["codex-main"],
+  "idle_sessions": ["claude-idle-helper"]
+}

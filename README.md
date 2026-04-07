@@ -150,6 +150,12 @@ In the current codebase, that means:
 - those hints only refine protection and stale ranking
 - the policy engine remains the final decision maker
 
+v0.6 / v0.7 extend this with:
+
+- a versioned OpenChrome JSON contract
+- a generic agent metadata JSON contract for Codex/Claude-style sessions
+- a provider inspection CLI
+
 ---
 
 ## How it works
@@ -310,6 +316,8 @@ The current repository already includes a working foundation:
 - SQLite-backed incident persistence
 - incident list/show and explain-last CLI
 - historical stale bonus based on recent incident history
+- provider inspection CLI and example provider payloads
+- compact health summary reporting
 - dry-run execution
 - JSONL journaling and latest snapshot output
 - compact LLM prompt generation and optional external analyzer support
@@ -382,6 +390,12 @@ cargo run -- incidents list --config config/oh-my-memory.example.toml --limit 10
 
 ```bash
 cargo run -- context providers --config config/oh-my-memory.example.toml --level orange
+```
+
+### 10. Print a health summary
+
+```bash
+cargo run -- summary --config config/oh-my-memory.example.toml --limit 20
 ```
 
 ---
@@ -471,8 +485,13 @@ over taking destructive action.
 - incident replay
 - status / incidents / explain-last CLI
 
+### v0.6 / v0.7 — Provider actualization and reporting
+- real provider contracts
+- OpenChrome and agent metadata examples
+- provider inspection CLI
+- health summary CLI
+
 ### Future
-- optional Codex/Claude metadata integrations
 - optional dashboard
 
 See [ROADMAP.md](./ROADMAP.md) for the fuller plan.

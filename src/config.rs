@@ -62,6 +62,7 @@ pub struct ProtectConfig {
 pub struct ContextConfig {
     pub tmux: ProviderConfig,
     pub openchrome: OpenChromeProviderConfig,
+    pub agents: ExternalProviderConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -72,6 +73,13 @@ pub struct ProviderConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OpenChromeProviderConfig {
+    pub enabled: bool,
+    pub min_level: PressureLevel,
+    pub command: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExternalProviderConfig {
     pub enabled: bool,
     pub min_level: PressureLevel,
     pub command: String,

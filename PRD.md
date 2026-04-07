@@ -509,6 +509,44 @@ v0.5부터는 daemon이 단발 snapshot 판단만 하지 않고, 이전 incident
 
 ---
 
+## 10.3 Provider actualization
+
+v0.6+부터는 provider를 단순 구조가 아니라 실제 운영 가능한 contract로 다룬다.
+
+핵심 원칙:
+- provider는 여전히 optional
+- provider는 힌트 공급자
+- provider는 versioned contract를 가져야 함
+- provider inspection이 가능해야 함
+
+현재 구현 방향:
+- OpenChrome provider → versioned JSON contract
+- Agent provider → Codex/Claude-style session metadata JSON contract
+- `context providers` CLI → availability / gating / collected hints 확인
+
+즉 connector를 “붙일 수 있음” 수준이 아니라,
+실제로 **재현 가능하고 검증 가능한 contract** 로 승격한다.
+
+---
+
+## 10.4 Health summary reporting
+
+v0.7부터는 operator가 latest incident만 보는 게 아니라,
+최근 incident 집합을 한 번에 요약할 수 있어야 한다.
+
+`summary` command는 다음을 집계한다.
+- incident count
+- latest incident id
+- average / max memory usage
+- average / max swap usage
+- total actions
+- llm recommended count
+- counts by pressure level
+
+이건 dashboard 없이도 운영자에게 충분한 상태 감각을 제공한다.
+
+---
+
 ## 14. 최종 설계 결론
 
 `oh-my-memory`는 다음 구조를 채택한다.

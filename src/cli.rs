@@ -41,6 +41,13 @@ pub enum Commands {
         #[arg(long)]
         config: PathBuf,
     },
+    /// Show an aggregate health summary from recent incidents.
+    Summary {
+        #[arg(long)]
+        config: PathBuf,
+        #[arg(long, default_value_t = 20)]
+        limit: usize,
+    },
     /// Inspect incident history.
     Incidents {
         #[command(subcommand)]

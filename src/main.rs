@@ -132,6 +132,11 @@ fn main() -> Result<()> {
                 println!("no incidents recorded");
             }
         }
+        Commands::Summary { config, limit } => {
+            let config = AppConfig::load(&config)?;
+            let summary = incident::summarize(&config, limit)?;
+            println!("{}", serde_json::to_string_pretty(&summary)?);
+        }
         Commands::Incidents { command } => match command {
             IncidentCommands::List { config, limit } => {
                 let config = AppConfig::load(&config)?;

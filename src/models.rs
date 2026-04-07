@@ -150,5 +150,19 @@ pub struct ContextHints {
     pub source: String,
     pub protected_pids: Vec<u32>,
     pub stale_pids: Vec<u32>,
+    pub recent_pids: Vec<u32>,
     pub notes: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HealthSummary {
+    pub incident_count: usize,
+    pub latest_incident_id: Option<i64>,
+    pub average_used_percent: f64,
+    pub max_used_percent: f64,
+    pub average_swap_mb: u64,
+    pub max_swap_mb: u64,
+    pub total_actions: usize,
+    pub llm_recommended_count: usize,
+    pub level_counts: Vec<(String, usize)>,
 }

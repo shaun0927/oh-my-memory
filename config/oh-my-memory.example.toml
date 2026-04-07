@@ -40,6 +40,13 @@ command = ""
 # Example:
 # command = "./examples/openchrome-provider.example.sh"
 
+[context.agents]
+enabled = false
+min_level = "orange"
+command = ""
+# Example:
+# command = "./examples/agent-provider.example.sh"
+
 [state]
 enabled = true
 sqlite_path = ".oh-my-memory/state.sqlite3"
