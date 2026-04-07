@@ -13,6 +13,15 @@ orange_swap_mb = 512
 red_swap_mb = 1024
 critical_swap_mb = 2048
 
+[stale]
+cpu_idle_below_percent = 1.0
+minimum_runtime_secs = 600
+duplicate_family_threshold = 2
+medium_memory_mb = 150
+high_memory_mb = 300
+cleanup_score_threshold = 60
+aggressive_score_threshold = 85
+
 [llm]
 enabled = false
 min_level_for_llm = "orange"
@@ -30,12 +39,14 @@ id = "cleanup_openchrome_workers"
 description = "Ask OpenChrome to clean idle workers/tabs"
 min_level = "orange"
 command = "echo cleanup_openchrome_workers"
+match_families = ["browser_automation", "helper"]
 
 [[actions.hooks]]
 id = "suspend_idle_tmux_agents"
 description = "Suspend low-priority tmux/agent workloads after checkpoint"
 min_level = "red"
 command = "echo suspend_idle_tmux_agents"
+match_families = ["multiplexer", "agent"]
 
 [[profiles]]
 name = "foreground_browser"

@@ -55,6 +55,15 @@ sample / daemon / explain / print-config
 - 시스템 메모리/스왑/프로세스 스냅샷 수집
 - 상위 메모리 사용 프로세스 추출
 - cheap path 중심
+- process age / parent / stale enrichment 기초 데이터 제공
+
+## `fingerprint`
+- process family 추론
+- playwright / browser automation / agent / tmux / watcher / build tool 분류
+
+## `stale`
+- parent missing / duplicate family / low CPU / long runtime 기반 stale score 계산
+- cleanup 후보 / aggressive 후보 산출
 
 ## `models`
 - `MemorySnapshot`
@@ -70,7 +79,7 @@ sample / daemon / explain / print-config
 ## `policy`
 - pressure level 판정
 - LLM 호출 게이트 계산
-- action 후보 생성
+- stale score 기반 action 우선순위 생성
 
 ## `actions`
 - dry-run 또는 external hook 실행
@@ -199,9 +208,9 @@ LLM의 비역할:
 ## 9. 향후 진화 방향
 
 ### v0.2
-- stale score refinement
-- recent activity heuristics
-- process family inference 강화
+- stale score / duplicate / orphan heuristic 반영
+- process family inference 반영
+- safe-first action ranking 강화
 
 ### v0.3
 - tmux active pane protection

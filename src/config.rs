@@ -9,6 +9,7 @@ use crate::models::{Importance, PressureLevel};
 pub struct AppConfig {
     pub sampling: SamplingConfig,
     pub thresholds: ThresholdConfig,
+    pub stale: StaleConfig,
     pub llm: LlmConfig,
     pub actions: ActionConfig,
     pub profiles: Vec<ProcessProfile>,
@@ -35,6 +36,17 @@ pub struct ThresholdConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StaleConfig {
+    pub cpu_idle_below_percent: f32,
+    pub minimum_runtime_secs: u64,
+    pub duplicate_family_threshold: u32,
+    pub medium_memory_mb: u64,
+    pub high_memory_mb: u64,
+    pub cleanup_score_threshold: i32,
+    pub aggressive_score_threshold: i32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LlmConfig {
     pub enabled: bool,
     pub min_level_for_llm: PressureLevel,
@@ -57,6 +69,8 @@ pub struct HookAction {
     pub description: String,
     pub min_level: PressureLevel,
     pub command: String,
+    #[serde(default)]
+    pub match_families: Vec<crate::models::ProcessFamily>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

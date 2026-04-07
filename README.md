@@ -283,6 +283,8 @@ connector는 나중에 정확도를 높이는 수단입니다.
 - 시스템 메모리/프로세스 스냅샷 수집
 - pressure level 계산
 - process profile 기반 중요도 분류
+- process family fingerprinting
+- orphan / duplicate / low-CPU / long-runtime 기반 stale score 계산
 - safe-first action plan 생성
 - dry-run execution path
 - JSONL journal / latest snapshot 저장
@@ -352,9 +354,10 @@ cargo run -- print-config
 ## 앞으로의 우선순위
 
 ### v0.2
-- stale score 정교화
-- orphan / duplicate / long-idle heuristics 고도화
-- safe terminate ladder 개선
+- process family fingerprinting
+- stale score 기반 cleanup candidate 계산
+- duplicate / orphan heuristic
+- safe-first action ranking
 
 ### v0.3
 - foreground / recent activity 보호 강화

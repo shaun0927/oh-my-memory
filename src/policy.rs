@@ -1,6 +1,7 @@
 use crate::{
     config::AppConfig,
-    models::{ActionPlan, Decision, Importance, MemorySnapshot, PressureLevel},
+    models::{ActionKind, ActionPlan, Decision, MemorySnapshot, PressureLevel, ProcessFamily},
+    stale::is_hook_applicable,
 };
 
 pub fn level_from_snapshot(config: &AppConfig, snapshot: &MemorySnapshot) -> PressureLevel {
@@ -54,37 +55,110 @@ pub fn plan_actions(
     snapshot: &MemorySnapshot,
 ) -> Vec<ActionPlan> {
     let mut plans = Vec::new();
-
-    let background_count = snapshot
+    let mut candidates = snapshot
         .processes
         .iter()
-        .filter(|p| matches!(p.importance, Importance::Background | Importance::Unknown))
-        .count();
+        .filter(|p| p.cleanup_candidate)
+        .collect::<Vec<_>>();
+    candidates.sort_by(|a, b| b.stale_score.cmp(&a.stale_score));
 
-    if background_count > 0 {
-        for hook in &config.actions.hooks {
-            if level >= hook.min_level {
-                plans.push(ActionPlan {
-                    id: hook.id.clone(),
-                    description: hook.description.clone(),
-                    min_level: hook.min_level,
-                    command: Some(hook.command.clone()),
-                    safe_by_default: true,
-                });
-            }
+    for hook in &config.actions.hooks {
+        if level < hook.min_level {
+            continue;
+        }
+        let matched = candidates
+            .iter()
+            .filter(|candidate| is_hook_applicable(&hook.match_families, candidate))
+            .map(|candidate| candidate.pid)
+            .collect::<Vec<_>>();
+        if !matched.is_empty() {
+            plans.push(ActionPlan {
+                id: hook.id.clone(),
+                kind: ActionKind::Hook,
+                description: hook.description.clone(),
+                min_level: hook.min_level,
+                command: Some(hook.command.clone()),
+                safe_by_default: true,
+                priority: 10,
+                target_pids: matched,
+                rationale: candidates
+                    .iter()
+                    .filter(|candidate| is_hook_applicable(&hook.match_families, candidate))
+                    .flat_map(|candidate| candidate.stale_reasons.clone())
+                    .take(5)
+                    .collect(),
+            });
+        }
+    }
+
+    if level >= PressureLevel::Red {
+        let generic_targets = candidates
+            .iter()
+            .filter(|candidate| {
+                matches!(
+                    candidate.family,
+                    ProcessFamily::Watcher
+                        | ProcessFamily::BuildTool
+                        | ProcessFamily::Helper
+                        | ProcessFamily::Unknown
+                )
+            })
+            .take(3)
+            .map(|candidate| candidate.pid)
+            .collect::<Vec<_>>();
+        if !generic_targets.is_empty() {
+            plans.push(ActionPlan {
+                id: "graceful_terminate_candidates".to_string(),
+                kind: ActionKind::GracefulTerminate,
+                description: "Gracefully terminate the safest stale candidates.".to_string(),
+                min_level: PressureLevel::Red,
+                command: None,
+                safe_by_default: true,
+                priority: 20,
+                target_pids: generic_targets,
+                rationale: vec!["stale candidates exceeded cleanup threshold".to_string()],
+            });
+        }
+    }
+
+    if level >= PressureLevel::Critical && config.actions.allow_destructive {
+        let aggressive_targets = candidates
+            .iter()
+            .filter(|candidate| candidate.aggressive_candidate)
+            .take(2)
+            .map(|candidate| candidate.pid)
+            .collect::<Vec<_>>();
+        if !aggressive_targets.is_empty() {
+            plans.push(ActionPlan {
+                id: "hard_terminate_aggressive_candidates".to_string(),
+                kind: ActionKind::HardTerminate,
+                description: "Hard terminate only the highest-confidence stale candidates."
+                    .to_string(),
+                min_level: PressureLevel::Critical,
+                command: None,
+                safe_by_default: false,
+                priority: 100,
+                target_pids: aggressive_targets,
+                rationale: vec!["critical pressure with aggressive stale candidates".to_string()],
+            });
         }
     }
 
     if plans.is_empty() && level >= PressureLevel::Yellow {
         plans.push(ActionPlan {
             id: "observe_only".to_string(),
+            kind: ActionKind::Observe,
             description: "Stay in observe-only mode and ask the user to inspect protected foreground workloads before stronger remediation.".to_string(),
             min_level: PressureLevel::Yellow,
             command: None,
             safe_by_default: true,
+            priority: 0,
+            target_pids: vec![],
+            rationale: vec!["no safe stale candidates were found".to_string()],
         });
     }
 
+    plans.sort_by_key(|plan| plan.priority);
     plans
 }
 
@@ -109,6 +183,14 @@ pub fn evaluate(
         format!("swap_used_mb={}", snapshot.used_swap_mb()),
         format!("top_processes={}", snapshot.processes.len()),
         format!("pressure_level={}", level.as_str()),
+        format!(
+            "cleanup_candidates={}",
+            snapshot
+                .processes
+                .iter()
+                .filter(|p| p.cleanup_candidate)
+                .count()
+        ),
     ];
 
     let planned_actions = plan_actions(config, level, snapshot);
@@ -125,7 +207,7 @@ pub fn evaluate(
 mod tests {
     use crate::{
         config::AppConfig,
-        models::{Importance, MemorySnapshot, PressureLevel, ProcessSample},
+        models::{Importance, MemorySnapshot, PressureLevel, ProcessFamily, ProcessSample},
     };
 
     fn test_config() -> AppConfig {
@@ -144,12 +226,21 @@ mod tests {
             used_swap_bytes: swap_mb * 1024 * 1024,
             processes: vec![ProcessSample {
                 pid: 1,
+                parent_pid: None,
                 name: "chrome".into(),
                 command: "chrome".into(),
                 memory_bytes: 10,
                 cpu_percent: 0.0,
+                runtime_secs: 0,
                 importance: Importance::Background,
+                family: ProcessFamily::BrowserMain,
                 matched_profile: None,
+                parent_missing: false,
+                duplicate_family_count: 1,
+                stale_score: 0,
+                stale_reasons: vec![],
+                cleanup_candidate: false,
+                aggressive_candidate: false,
             }],
         }
     }

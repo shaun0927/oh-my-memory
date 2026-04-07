@@ -5,7 +5,9 @@ use sysinfo::{ProcessRefreshKind, ProcessesToUpdate, RefreshKind, System, Update
 
 use crate::{
     config::AppConfig,
+    fingerprint::detect_family,
     models::{Importance, MemorySnapshot, ProcessSample},
+    stale::enrich_processes,
 };
 
 fn classify_process(config: &AppConfig, name: &str, command: &str) -> (Importance, Option<String>) {
@@ -51,16 +53,34 @@ pub fn collect_snapshot(config: &AppConfig) -> Result<MemorySnapshot> {
             let (importance, matched_profile) = classify_process(config, &name, &command);
             ProcessSample {
                 pid: pid.as_u32(),
+                parent_pid: process.parent().map(|pid| pid.as_u32()),
                 name,
                 command,
                 memory_bytes: process.memory(),
                 cpu_percent: process.cpu_usage(),
+                runtime_secs: process.run_time(),
                 importance,
+                family: detect_family(
+                    &process.name().to_string_lossy(),
+                    &process
+                        .cmd()
+                        .iter()
+                        .map(|s| s.to_string_lossy())
+                        .collect::<Vec<_>>()
+                        .join(" "),
+                ),
                 matched_profile,
+                parent_missing: false,
+                duplicate_family_count: 1,
+                stale_score: 0,
+                stale_reasons: vec![],
+                cleanup_candidate: false,
+                aggressive_candidate: false,
             }
         })
         .collect();
 
+    enrich_processes(config, &mut processes);
     processes.sort_by(|a, b| b.memory_bytes.cmp(&a.memory_bytes));
     processes.truncate(config.sampling.top_processes);
 

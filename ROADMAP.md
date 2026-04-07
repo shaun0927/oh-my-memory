@@ -13,11 +13,11 @@
 - [x] Journal/latest snapshot output
 
 ## v0.2 — Better stale detection
-- [ ] Process family fingerprinting refinement
-- [ ] Stale score model
-- [ ] Duplicate sibling process heuristics
-- [ ] Better orphan detection
-- [ ] More precise safe-first action ranking
+- [x] Process family fingerprinting refinement
+- [x] Stale score model
+- [x] Duplicate sibling process heuristics
+- [x] Better orphan detection
+- [x] More precise safe-first action ranking
 
 ## v0.3 — User-work protection
 - [ ] Recent activity heuristics
